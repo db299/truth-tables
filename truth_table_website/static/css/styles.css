@@ -1,0 +1,80 @@
+@font-face {
+    font-family: Amasis;
+    src: url(Amasis.ttf);
+}
+body {
+    font-family: Amasis;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; 
+    width: 100%;
+    max-width: 1200px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.left-panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%; 
+    margin-bottom: 20px;
+}
+
+.left-panel form {
+    margin-bottom: 10px;
+}
+
+.left-panel input[type="text"] {
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.left-panel button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #40144c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.left-panel button:hover {
+    background-color: #9814fc;
+}
+
+.output-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    overflow-y: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.output-panel pre {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    white-space: pre;
+    overflow: auto;
+    max-width: 100%;
+}

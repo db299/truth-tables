@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truth Table Generator</title>
+    <!-- Link CSS from the static folder -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h1>Truth Table Generator</h1>
+            <form id="generator-form" action="/" method="POST">
+                <label for="input_text">Enter Input:</label>
+                <input type="text" id="input_text" name="input_text" value="{{ request.form.get('input_text', '') }}" autocomplete="off" required>
+                <input type="hidden" id="mode" name="mode" value="{{ request.form.get('mode', 'truth_table') }}">
+                <button type="submit" onclick="handleButtonClick('truth_table')">Truth Table</button>
+                <button type="submit" onclick="handleButtonClick('true_rows')">Find True Rows</button>
+
+                </div>
+
+            </form>
+            <div class="output-panel">
+                <h2>Output:</h2>
+                <pre id="table-content"></pre>
+            </div>
+        </div>
+       
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
