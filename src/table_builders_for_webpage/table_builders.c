@@ -184,7 +184,7 @@ char *generate_true_postfix_truth_table_segment(const char *expression, int star
         }
         if (row[row_length - 2] == '1')
         {
-            memcpy(segment + added_rows * row_length, row, row_length);
+            memcpy(segment + (int64_t)added_rows * row_length, row, row_length);
             added_rows++;
         }
         free(row);
@@ -525,7 +525,7 @@ char *generate_true_infix_truth_table_segment(const char *expression, int start_
         }
         if (row[row_length - 2] == '1')
         {
-            memcpy(segment + added_rows * row_length, row, row_length);
+            memcpy(segment + (int64_t)added_rows * row_length, row, row_length);
             added_rows++;
         }
         free(row);
