@@ -10,17 +10,19 @@ app = Flask(__name__)
 CACHE_DIR = 'cache_files'
 os.makedirs(CACHE_DIR, exist_ok=True)
 
+# Function to get the file path based on the session id
 def get_cache_file_path(session_id):
     # Generate the cache file name based on the session id
     return os.path.join(CACHE_DIR, f'{session_id}.cache')
+
+
+# Function to delete the entire cache dir on unload
 def cleanup_cache():
     if os.path.exists(CACHE_DIR):
         shutil.rmtree(CACHE_DIR)  # Deletes the entire cache_files directory
 
-
-# Register the cleanup function to run on exit
 atexit.register(cleanup_cache)
-
+# Function to clear the cache, received as request from the website
 @app.route('/clear_cache', methods=['POST'])
 def clear_cache():
     session_id = request.args.get('session_id')
@@ -45,10 +47,12 @@ def clear_cache():
 
     return jsonify({'message': 'Cache cleared successfully'}), 200
 
+# Function to render the webpage whenever a request occurs
 @app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html')
 
+# Function to generate the rows and pass them back to the website
 @app.route('/generate', methods=['GET', 'POST'])
 def generate_rows():
     expression = request.args.get('expression')
@@ -76,7 +80,7 @@ def generate_rows():
                     if len(extracted_lines) >= 100:
                         break
                     current_line_number += 1
-                    extracted_lines.append(line.strip())
+                    extracted_lines.append(line)
 
             return jsonify(extracted_lines)
 
@@ -84,14 +88,14 @@ def generate_rows():
             # Run the command and create the cache file
             command = ['./website_binary_ttable', expression, cache_file_path]
             try:
-                # Run truth table to create the cache file 
+                # Run truth table to write to the cache file 
                 subprocess.run(command, text=True)
                 extracted_lines = []
                 current_line_number = 0
                 with open(cache_file_path, 'r') as file:
                     for line in file:
                        
-                        extracted_lines.append(line.strip())
+                        extracted_lines.append(line)
                         current_line_number += 1
                         if current_line_number == 100:
                             break

@@ -29,7 +29,7 @@ static int precedence(char op)
     }
 }
 
-static bool is_right_associative(char op)
+static bool is_right_associative_only(char op)
 {
     return (op == '-' || op == '>');
 }
@@ -75,8 +75,8 @@ char *shunting_yard(const char *expression)
         else if (is_operator(token))
         { // Operator
             while (!is_empty(&operator_stack) && is_operator(peek(&operator_stack)) &&
-                   ((is_right_associative(token) && precedence(token) < precedence(peek(&operator_stack))) ||
-                    (!is_right_associative(token) && precedence(token) <= precedence(peek(&operator_stack)))))
+                   ((is_right_associative_only(token) && precedence(token) < precedence(peek(&operator_stack))) ||
+                    (!is_right_associative_only(token) && precedence(token) <= precedence(peek(&operator_stack)))))
             {
 
                 output[output_index++] = pop(&operator_stack);
@@ -154,8 +154,8 @@ int *infix_map(const char *expression)
         else if (is_operator(token))
         { // Operator
             while (!is_empty(&operator_stack) && is_operator(peek(&operator_stack)) &&
-                   ((is_right_associative(token) && precedence(token) < precedence(peek(&operator_stack))) ||
-                    (!is_right_associative(token) && precedence(token) <= precedence(peek(&operator_stack)))))
+                   ((is_right_associative_only(token) && precedence(token) < precedence(peek(&operator_stack))) ||
+                    (!is_right_associative_only(token) && precedence(token) <= precedence(peek(&operator_stack)))))
             {
 
                 rpnArr[rpn_index++] = int_stack_pop(&positions_stack);
