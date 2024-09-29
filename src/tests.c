@@ -429,11 +429,6 @@ void test_generate_true_infix_truth_table_segment(void)
 }
 
 void test_count_unique_variables(void) {
-    FILE *null_file = freopen("/dev/null", "w", stderr);
-
-    // Restore stderr back to the console
-    freopen("/dev/tty", "w", stderr); // For Unix-like systems
-
     // Test 1: Basic test with unique variables
     CU_ASSERT_EQUAL(count_unique_variables("abc"), 3);
     CU_ASSERT_EQUAL(count_unique_variables("a + b + c"), 3);

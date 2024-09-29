@@ -475,6 +475,7 @@ char *generate_infix_truth_table_segment(const char *expression, int start_row, 
 
 char *generate_true_infix_truth_table_segment(const char *expression, int start_row, int end_row)
 {
+
     // Making sure not to overshoot the table
     if (end_row >= (1 << count_unique_variables(expression)))
     {
@@ -482,8 +483,8 @@ char *generate_true_infix_truth_table_segment(const char *expression, int start_
     }
 
     int expression_length = strlen(expression);
-    int *rpnArr = infix_map(expression);
-    if (rpnArr == NULL)
+    int *inf_map = infix_map(expression);
+    if (inf_map == NULL)
     {
         fprintf(stderr, "Failed to generate infix map in file %s at line %d\n", __FILE__, __LINE__);
         return (char *)NULL;
@@ -492,7 +493,7 @@ char *generate_true_infix_truth_table_segment(const char *expression, int start_
     if (rpn_expression == NULL)
     {
         fprintf(stderr, "Failed to convert infix expression in file %s at line %d\n", __FILE__, __LINE__);
-        free(rpnArr);
+        free(inf_map);
         return (char *)NULL;
     }
     // Debug
@@ -514,11 +515,11 @@ char *generate_true_infix_truth_table_segment(const char *expression, int start_
 
     for (int i = start_row; i < end_row; i++)
     {
-        char *row = generate_infix_row(i, number_of_variables, rpn_expression, rpnArr, expression_length);
+        char *row = generate_infix_row(i, number_of_variables, rpn_expression, inf_map, expression_length);
         if (row == NULL)
         {
             fprintf(stderr, "Failed to generate row in file %s at line %d\n", __FILE__, __LINE__);
-            free(rpnArr);
+            free(inf_map);
             free(rpn_expression);
             free(segment);
             return (char *)NULL;
@@ -533,7 +534,7 @@ char *generate_true_infix_truth_table_segment(const char *expression, int start_
 
     segment[segment_length] = '\0';
     free(rpn_expression);
-    free(rpnArr);
+    free(inf_map);
 
     return segment;
 }

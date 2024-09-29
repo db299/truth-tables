@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
         }
         if (fclose(file) != 0)
         {
-            perror("Error closing file");
-            return 1; // Exit if file closing fails
+            fprintf(stderr,"Error closing file\n");
+            exit(EXIT_FAILURE);
         }
     }
     else if (argc == 4)
