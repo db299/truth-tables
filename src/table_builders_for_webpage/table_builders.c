@@ -320,7 +320,7 @@ void generate_postfix_table_body(const char *expression, FILE *file)
             if (i == 0 || segment_index == number_of_segments - 1)
             {
                 // Join the previous thread
-                if (pthread_join(threads[(current_thread_index + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)], NULL) != 0)
+                if (pthread_join(threads[current_thread_index], NULL) != 0)
                 {
                     fprintf(stderr, "Failed to join thread in file %s at line %d\n", __FILE__, __LINE__);
                     exit(EXIT_FAILURE);
@@ -329,7 +329,7 @@ void generate_postfix_table_body(const char *expression, FILE *file)
             else
             {
                 // Detach the previous thread
-                if (pthread_detach(threads[(current_thread_index + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)]) != 0)
+                if (pthread_detach(threads[current_thread_index]) != 0)
                 {
                     fprintf(stderr, "Failed to detach thread in file %s at line %d\n", __FILE__, __LINE__);
                     exit(EXIT_FAILURE);
@@ -697,7 +697,7 @@ void generate_infix_table_body(const char *expression, FILE *file)
             if (i == 0 || segment_index == number_of_segments - 1)
             {
                 // Join the previous thread
-                if (pthread_join(threads[(current_thread_index + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)], NULL) != 0)
+                if (pthread_join(threads[current_thread_index], NULL) != 0)
                 {
                     fprintf(stderr, "Failed to join thread in file %s at line %d\n", __FILE__, __LINE__);
                     exit(EXIT_FAILURE);
@@ -706,7 +706,7 @@ void generate_infix_table_body(const char *expression, FILE *file)
             else
             {
                 // Detach the previous thread
-                if (pthread_detach(threads[(current_thread_index + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)]) != 0)
+                if (pthread_detach(threads[current_thread_index]) != 0)
                 {
                     fprintf(stderr, "Failed to detach thread in file %s at line %d\n", __FILE__, __LINE__);
                     exit(EXIT_FAILURE);
