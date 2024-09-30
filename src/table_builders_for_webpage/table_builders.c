@@ -15,33 +15,38 @@
 
 #include "table_builders.h"
 
-char *generate_postfix_row(int row_number, int number_of_variables, const char *expression) {
+char *generate_postfix_row(int row_number, int number_of_variables, const char *expression)
+{
     int expression_length = strlen(expression);
 
     int row_length = number_of_variables * 2 + expression_length + 10;
     char *row = (char *)malloc((row_length) * sizeof(char));
-    if (row == NULL) {
+    if (row == NULL)
+    {
         fprintf(stderr, "Memory allocation for postfix row failed in %s at line %d\n", __FILE__, __LINE__);
         return (char *)NULL;
     }
 
     char *binary_number_string = int_to_binary_string(row_number, number_of_variables);
-    if (binary_number_string == NULL) {
+    if (binary_number_string == NULL)
+    {
         fprintf(stderr, "Binary conversion failed in %s at line %d\n", __FILE__, __LINE__);
         free(row);
         return (char *)NULL;
     }
 
     // Copy binary values to the row
-    for (int j = 0; j < number_of_variables; j++) {
+    for (int j = 0; j < number_of_variables; j++)
+    {
         row[2 * j] = binary_number_string[j];
         row[2 * j + 1] = ' '; // Add a space after each binary digit
     }
-    row[number_of_variables * 2] = ':';  // Add the colon
+    row[number_of_variables * 2] = ':';     // Add the colon
     row[number_of_variables * 2 + 1] = ' '; // Add space after colon
 
     char *modified_expression = replace_with_binary(expression, row_number);
-    if (modified_expression == NULL) {
+    if (modified_expression == NULL)
+    {
         fprintf(stderr, "Failed to replace variables with binary in %s at line %d\n", __FILE__, __LINE__);
         free(row);
         free(binary_number_string);
@@ -49,7 +54,8 @@ char *generate_postfix_row(int row_number, int number_of_variables, const char *
     }
 
     char *result = evaluate_expr(modified_expression);
-    if (result == NULL) {
+    if (result == NULL)
+    {
         fprintf(stderr, "Evaluation failed in %s at line %d\n", __FILE__, __LINE__);
         free(modified_expression);
         free(binary_number_string);
@@ -58,7 +64,8 @@ char *generate_postfix_row(int row_number, int number_of_variables, const char *
 
     int position = number_of_variables * 2 + 2;
     // Handle single variable case
-    if (expression_length == 1) { // number_of_variables*2 for the first column, +2 for ": "
+    if (expression_length == 1)
+    { // number_of_variables*2 for the first column, +2 for ": "
         // Copy the string "  :   "
         row[position++] = ' ';
         row[position++] = ' ';
@@ -67,19 +74,21 @@ char *generate_postfix_row(int row_number, int number_of_variables, const char *
         row[position++] = ' ';
         row[position++] = ' ';
         row[position++] = modified_expression[0]; // Copy the modified expression
-        row[position++] = '\n'; // New line at the end
-    } else {
+        row[position++] = '\n';                   // New line at the end
+    }
+    else
+    {
         int result_length = strlen(result);
         memcpy(row + position, result, result_length); // Copy result
         position += result_length;
-        row[position++] = ' '; // Space before the final result
-        row[position++] = ':'; // Add the colon
-        row[position++] = ' '; // Space after colon
-        row[position++] = ' '; // Space after colon
-        row[position++] = ' '; // Space after colon
-        row[position++] = result[result_length-1]; // Last character of result
-        row[position++] = '\n'; // New line at the end
-        row[position++] = '\0'; // Null-terminate the string
+        row[position++] = ' ';                       // Space before the final result
+        row[position++] = ':';                       // Add the colon
+        row[position++] = ' ';                       // Space after colon
+        row[position++] = ' ';                       // Space after colon
+        row[position++] = ' ';                       // Space after colon
+        row[position++] = result[result_length - 1]; // Last character of result
+        row[position++] = '\n';                      // New line at the end
+        row[position++] = '\0';                      // Null-terminate the string
     }
 
     free(result);
@@ -218,10 +227,9 @@ void *postfix_rows_generator(void *arg)
 
     sem_wait(&data->semaphore[data->thread_id]);
     fprintf(data->file, "%s", segment);
-    if (data->thread_id + 1 < data->num_threads)
-    {
-        sem_post(&data->semaphore[data->thread_id + 1]);
-    }
+
+    sem_post(&data->semaphore[(data->thread_id + 1) % (data->num_threads)]);
+    
     free(segment);
 
     pthread_exit(NULL);
@@ -229,24 +237,25 @@ void *postfix_rows_generator(void *arg)
 
 void generate_postfix_table_body(const char *expression, FILE *file)
 {
+    int segment_size = 10000;
     int number_of_variables = count_unique_variables(expression);
     int number_of_rows = 1 << number_of_variables;
+    int number_of_segments = number_of_rows / segment_size + (number_of_rows % segment_size != 0 ? 1 : 0);
 
-    // Allocating the maximum number of threads possible
-    int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
-    if (num_cores == -1)
+    // Set the maximum number of threads to create in each batch
+    int max_threads_in_batch = 5; // Each batch gets this amount of threads
+    if (max_threads_in_batch > number_of_segments)
     {
-        perror("sysconf");
-        exit(EXIT_FAILURE);
+        max_threads_in_batch = number_of_segments; // Cap it at the total number of segments if smaller
     }
 
-    // Making as many threads as the machine has cores
-    pthread_t threads[num_cores];
-    postfix_thread_data thread_data[num_cores];
-    sem_t semaphores[num_cores];
+    // Allocate arrays for threads and thread data of size 2 * max_threads_in_batch
+    pthread_t threads[2 * max_threads_in_batch];
+    postfix_thread_data thread_data[2 * max_threads_in_batch];
+    sem_t semaphores[2 * max_threads_in_batch];
 
     // Initialize semaphores
-    for (int i = 0; i < num_cores; i++)
+    for (int i = 0; i < 2 * max_threads_in_batch; i++)
     {
         if (sem_init(&semaphores[i], 0, 0) == -1)
         {
@@ -254,57 +263,88 @@ void generate_postfix_table_body(const char *expression, FILE *file)
             exit(EXIT_FAILURE);
         }
     }
+
+    // Post the first semaphore to allow the first thread to start immediately
     sem_post(&semaphores[0]);
 
-    // The factor to multiply the rows for each subsequent thread (e.g., 1.5)
-    double factor = 1.5;
-
-    // Calculate the sum of the geometric progression for the ratios
-    double sum_of_ratios = ((1 / (factor - 1)) * (pow(factor, num_cores - 1) - 1)); // Sum of the geometric series
-
-    // Calculate how many rows the first thread gets
-    int first_thread_rows = number_of_rows / sum_of_ratios;
-
+    int current_segment = 0;
     int start_row = 0;
+    int current_thread_index = 0;
 
-    // Distributing the workload across the threads
-    for (int i = 0; i < num_cores; i++)
+    while (current_segment < number_of_segments)
     {
-        thread_data[i].file = file;
-        thread_data[i].num_threads = num_cores;
-        thread_data[i].thread_id = i;
-        thread_data[i].semaphore = semaphores;
-        thread_data[i].number_of_variables = number_of_variables;
-        thread_data[i].expression = expression;
-        thread_data[i].start_row = start_row;
+        // Determine how many threads to create in this batch
+        int threads_to_create = (current_segment + max_threads_in_batch > number_of_segments) ? (number_of_segments - current_segment) : max_threads_in_batch;
 
-        if (i == num_cores - 1)
+        for (int i = 0; i < threads_to_create; i++)
         {
-            // For the last thread, assign it the remaining rows
-            thread_data[i].end_row = number_of_rows;
-        }
-        else
-        {
-            // Calculate the number of rows for this thread based on the factor
-            int rows_for_current_thread = first_thread_rows * pow(factor, i);
-            thread_data[i].end_row = start_row + rows_for_current_thread;
-        }
+            int segment_index = current_segment + i;
 
-        // Update the start row for the next thread
-        start_row = thread_data[i].end_row;
+            // Set start and end rows for each segment
+            thread_data[current_thread_index].start_row = start_row;
+            if (segment_index == number_of_segments - 1)
+            {
+                thread_data[current_thread_index].end_row = number_of_rows; // Last segment takes all remaining rows
+            }
+            else
+            {
+                thread_data[current_thread_index].end_row = start_row + segment_size;
+                if (thread_data[current_thread_index].end_row > number_of_rows)
+                {
+                    thread_data[current_thread_index].end_row = number_of_rows;
+                }
+            }
 
-        int rc = pthread_create(&threads[i], NULL, postfix_rows_generator, &thread_data[i]);
-        if (rc)
-        {
-            fprintf(stderr, "Error creating thread %d: %d\n", i, rc);
-            exit(EXIT_FAILURE);
+            // Populate other thread data
+            thread_data[current_thread_index].file = file;
+            thread_data[current_thread_index].semaphore = semaphores;
+            thread_data[current_thread_index].num_threads = 2*max_threads_in_batch;
+            thread_data[current_thread_index].thread_id = current_thread_index;
+            thread_data[current_thread_index].number_of_variables = number_of_variables;
+            thread_data[current_thread_index].expression = expression;
+
+            // Update start_row for the next segment
+            start_row = thread_data[current_thread_index].end_row;
+
+            // Create the thread
+            int rc = pthread_create(&threads[current_thread_index], NULL, postfix_rows_generator, &thread_data[current_thread_index]);
+            if (rc)
+            {
+                fprintf(stderr, "Error creating thread %d: %d\n", segment_index, rc);
+                exit(EXIT_FAILURE);
+            }
+
+            // Increment the current_thread_index in a circular manner
+            current_thread_index = (current_thread_index + 1) % (2 * max_threads_in_batch);
+
+            // Join or detach the previous thread if necessary
+            if (i == 0 || segment_index == number_of_segments - 1)
+            {
+                // Join the previous thread
+                if (pthread_join(threads[(current_thread_index - 1 + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)], NULL) != 0)
+                {
+                    perror("Failed to join thread");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                // Detach the previous thread
+                if (pthread_detach(threads[(current_thread_index - 1 + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)]) != 0)
+                {
+                    perror("Failed to detach thread");
+                    exit(EXIT_FAILURE);
+                }
+            }
         }
+        // Move to the next batch of segments
+        current_segment += threads_to_create;
     }
 
-    // Join all the threads
-    for (int i = 0; i < num_cores; i++)
+    // Clean up: destroy semaphores
+    for (int i = 0; i < 2 * max_threads_in_batch; i++)
     {
-        pthread_join(threads[i], NULL);
+        sem_destroy(&semaphores[i]);
     }
 }
 
@@ -332,7 +372,7 @@ char *generate_infix_row(int row_number, int number_of_variables, const char *ex
         row[2 * j] = binary_number_string[j];
         row[2 * j + 1] = ' '; // Add a space after each binary digit
     }
-    row[number_of_variables * 2] = ':';  // Add the colon
+    row[number_of_variables * 2] = ':';     // Add the colon
     row[number_of_variables * 2 + 1] = ' '; // Add space after colon
 
     char *modified_expression = replace_with_binary(expression, row_number);
@@ -366,7 +406,7 @@ char *generate_infix_row(int row_number, int number_of_variables, const char *ex
     }
 
     // Position to insert the result into the row
-    int position = number_of_variables * 2 + 2; 
+    int position = number_of_variables * 2 + 2;
     // Handle the case of a single variable expression
     if (strlen(modified_expression) == 1)
     {
@@ -375,9 +415,9 @@ char *generate_infix_row(int row_number, int number_of_variables, const char *ex
         row[position++] = ':';
         row[position++] = ' '; // Space after ":"
         row[position++] = ' ';
-        row[position++] = ' '; 
+        row[position++] = ' ';
         row[position++] = modified_expression[0]; // The single variable result
-        row[position++] = '\n'; // New line at the end
+        row[position++] = '\n';                   // New line at the end
     }
     // Handle the general case
     else
@@ -561,34 +601,35 @@ void *infix_rows_generator(void *arg)
     sem_wait(&data->semaphore[data->thread_id]);
 
     fprintf(data->file, "%s", segment);
-    if (data->thread_id + 1 < data->num_threads)
-    {
-        sem_post(&data->semaphore[data->thread_id + 1]);
-    }
+   
+    sem_post(&data->semaphore[(data->thread_id + 1) % (data->num_threads)]);
+    
     free(segment);
     pthread_exit(NULL);
 }
 
 void generate_infix_table_body(const char *expression, FILE *file)
 {
+    int segment_size = 10000;
     int *inf_map = infix_map(expression);
     int number_of_variables = count_unique_variables(expression);
     int number_of_rows = 1 << number_of_variables;
+    int number_of_segments = number_of_rows / segment_size + (number_of_rows % segment_size != 0 ? 1 : 0);
 
-    // Get the number of cores (threads)
-    int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
-    if (num_cores == -1)
+    // Set the maximum number of threads to create in each batch
+    int max_threads_in_batch = 5; // Each batch gets this amount of threads
+    if (max_threads_in_batch > number_of_segments)
     {
-        perror("sysconf");
-        exit(EXIT_FAILURE);
+        max_threads_in_batch = number_of_segments; // Cap it at the total number of segments if smaller
     }
 
-    // Thread array and thread data array
-    pthread_t threads[num_cores];
-    infix_thread_data thread_data[num_cores];
-    sem_t semaphores[num_cores];
+    // Allocate arrays for threads and thread data of size 2 * max_threads_in_batch
+    pthread_t threads[2 * max_threads_in_batch];
+    infix_thread_data thread_data[2 * max_threads_in_batch];
+    sem_t semaphores[2 * max_threads_in_batch];
 
-    for (int i = 0; i < num_cores; i++)
+    // Initialize semaphores
+    for (int i = 0; i < 2 * max_threads_in_batch; i++)
     {
         if (sem_init(&semaphores[i], 0, 0) == -1)
         {
@@ -600,57 +641,86 @@ void generate_infix_table_body(const char *expression, FILE *file)
     // Post the first semaphore to allow the first thread to start immediately
     sem_post(&semaphores[0]);
 
-    // The factor to multiply the rows for each subsequent thread (e.g., 1.5)
-    // Computing rows like this allows quicker freeing of memory reducing RAM demand.
-    double factor = 1.5;
-
-    // Use formula for sum of geometric series
-    double sum_of_ratios = ((1 / (factor - 1)) * (pow(factor, num_cores - 1) - 1));
-
-    // Calculate how many rows the first thread gets
-    // In the geometric progression this would be 'a' where the progression is
-    // a + ar + ar^2 + ... + ar^(number_of_cores - 1)
-    int first_thread_rows = number_of_rows / sum_of_ratios;
+    int current_segment = 0;
     int start_row = 0;
+    int current_thread_index = 0;
 
-    for (int i = 0; i < num_cores; i++)
+    while (current_segment < number_of_segments)
     {
-        // Assign rows based on the logic: each thread gets factor times the rows of the previous thread
-        if (i == num_cores - 1)
-        {
-            // The last thread takes all the remaining rows
-            thread_data[i].end_row = number_of_rows;
-        }
-        else
-        {
-            // Calculate the rows for the current thread as first_thread_rows * (factor^i)
-            int rows_for_current_thread = first_thread_rows * pow(factor, i);
-            thread_data[i].end_row = start_row + rows_for_current_thread;
-        }
-        thread_data[i].file = file;
-        thread_data[i].semaphore = semaphores;
-        thread_data[i].num_threads = num_cores;
-        thread_data[i].thread_id = i;
-        thread_data[i].expression_length = strlen(expression);
-        thread_data[i].map = inf_map;
-        thread_data[i].number_of_variables = number_of_variables;
-        thread_data[i].expression = expression;
-        thread_data[i].start_row = start_row;
+        // Determine how many threads to create in this batch
+        int threads_to_create = (current_segment + max_threads_in_batch > number_of_segments) ? (number_of_segments - current_segment) : max_threads_in_batch;
 
-        // Update start_row for the next thread
-        start_row = thread_data[i].end_row;
-        int rc = pthread_create(&threads[i], NULL, infix_rows_generator, &thread_data[i]);
-        if (rc)
+        for (int i = 0; i < threads_to_create; i++)
         {
-            fprintf(stderr, "Error creating thread %d: %d\n", i, rc);
-            exit(EXIT_FAILURE);
+            int segment_index = current_segment + i;
+
+            // Set start and end rows for each segment
+            thread_data[current_thread_index].start_row = start_row;
+            if (segment_index == number_of_segments - 1)
+            {
+                thread_data[current_thread_index].end_row = number_of_rows; // Last segment takes all remaining rows
+            }
+            else
+            {
+                thread_data[current_thread_index].end_row = start_row + segment_size;
+                if (thread_data[current_thread_index].end_row > number_of_rows)
+                {
+                    thread_data[current_thread_index].end_row = number_of_rows;
+                }
+            }
+
+            // Populate other thread data
+            thread_data[current_thread_index].file = file;
+            thread_data[current_thread_index].semaphore = semaphores;
+            thread_data[current_thread_index].num_threads = 2*max_threads_in_batch;
+            thread_data[current_thread_index].thread_id = current_thread_index;
+            thread_data[current_thread_index].expression_length = strlen(expression);
+            thread_data[current_thread_index].map = inf_map;
+            thread_data[current_thread_index].number_of_variables = number_of_variables;
+            thread_data[current_thread_index].expression = expression;
+
+            // Update start_row for the next segment
+            start_row = thread_data[current_thread_index].end_row;
+
+            // Create the thread
+            int rc = pthread_create(&threads[current_thread_index], NULL, infix_rows_generator, &thread_data[current_thread_index]);
+            if (rc)
+            {
+                fprintf(stderr, "Error creating thread %d: %d\n", segment_index, rc);
+                exit(EXIT_FAILURE);
+            }
+
+            // Increment the current_thread_index in a circular manner
+            current_thread_index = (current_thread_index + 1) % (2 * max_threads_in_batch);
+
+            // Join or detach the previous thread if necessary
+            if (i == 0 || segment_index == number_of_segments - 1)
+            {
+                // Join the previous thread
+                if (pthread_join(threads[(current_thread_index - 1 + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)], NULL) != 0)
+                {
+                    perror("Failed to join thread");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                // Detach the previous thread
+                if (pthread_detach(threads[(current_thread_index - 1 + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)]) != 0)
+                {
+                    perror("Failed to detach thread");
+                    exit(EXIT_FAILURE);
+                }
+            }
         }
+        // Move to the next batch of segments
+        current_segment += threads_to_create;
     }
 
-    // Wait for all threads to finish
-    for (int i = 0; i < num_cores; i++)
+    // Clean up: destroy semaphores
+    for (int i = 0; i < 2 * max_threads_in_batch; i++)
     {
-        pthread_join(threads[i], NULL);
+        sem_destroy(&semaphores[i]);
     }
 
     // Free allocated memory
