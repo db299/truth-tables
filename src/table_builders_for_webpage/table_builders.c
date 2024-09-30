@@ -315,27 +315,27 @@ void generate_postfix_table_body(const char *expression, FILE *file)
             }
 
             // Increment the current_thread_index in a circular manner
-            current_thread_index = (current_thread_index + 1) % (2 * max_threads_in_batch);
-
+            
             // Join or detach the previous thread if necessary
             if (i == 0 || segment_index == number_of_segments - 1)
             {
                 // Join the previous thread
-                if (pthread_join(threads[(current_thread_index - 1 + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)], NULL) != 0)
+                if (pthread_join(threads[(current_thread_index + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)], NULL) != 0)
                 {
-                    perror("Failed to join thread");
+                    fprintf(stderr, "Failed to join thread in file %s at line %d\n", __FILE__, __LINE__);
                     exit(EXIT_FAILURE);
                 }
             }
             else
             {
                 // Detach the previous thread
-                if (pthread_detach(threads[(current_thread_index - 1 + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)]) != 0)
+                if (pthread_detach(threads[(current_thread_index + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)]) != 0)
                 {
-                    perror("Failed to detach thread");
+                    fprintf(stderr, "Failed to detach thread in file %s at line %d\n", __FILE__, __LINE__);
                     exit(EXIT_FAILURE);
                 }
             }
+            current_thread_index = (current_thread_index + 1) % (2 * max_threads_in_batch);
         }
         // Move to the next batch of segments
         current_segment += threads_to_create;
@@ -691,27 +691,29 @@ void generate_infix_table_body(const char *expression, FILE *file)
             }
 
             // Increment the current_thread_index in a circular manner
-            current_thread_index = (current_thread_index + 1) % (2 * max_threads_in_batch);
+        
 
             // Join or detach the previous thread if necessary
             if (i == 0 || segment_index == number_of_segments - 1)
             {
                 // Join the previous thread
-                if (pthread_join(threads[(current_thread_index - 1 + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)], NULL) != 0)
+                if (pthread_join(threads[(current_thread_index + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)], NULL) != 0)
                 {
-                    perror("Failed to join thread");
+                    fprintf(stderr, "Failed to join thread in file %s at line %d\n", __FILE__, __LINE__);
                     exit(EXIT_FAILURE);
                 }
             }
             else
             {
                 // Detach the previous thread
-                if (pthread_detach(threads[(current_thread_index - 1 + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)]) != 0)
+                if (pthread_detach(threads[(current_thread_index + (2 * max_threads_in_batch)) % (2 * max_threads_in_batch)]) != 0)
                 {
-                    perror("Failed to detach thread");
+                    fprintf(stderr, "Failed to detach thread in file %s at line %d\n", __FILE__, __LINE__);
                     exit(EXIT_FAILURE);
                 }
             }
+
+            current_thread_index = (current_thread_index + 1) % (2 * max_threads_in_batch);
         }
         // Move to the next batch of segments
         current_segment += threads_to_create;
