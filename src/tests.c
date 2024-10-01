@@ -290,25 +290,25 @@ void test_generate_postfix_row(void)
 {
     char *result;
     // Test with a simple expression with two variables
-    result = generate_postfix_row(0, 2, "ab&");
+    result = generate_postfix_row(0, 2, "ab&", 3);
     CU_ASSERT_STRING_EQUAL(result, "0 0 :   0 :   0\n");
     free(result);
 
-    result = generate_postfix_row(1, 2, "ab&");
+    result = generate_postfix_row(1, 2, "ab&", 3);
     CU_ASSERT_STRING_EQUAL(result, "0 1 :   0 :   0\n");
     free(result);
 
-    result = generate_postfix_row(3, 2, "ab&");
+    result = generate_postfix_row(3, 2, "ab&", 3);
     CU_ASSERT_STRING_EQUAL(result, "1 1 :   1 :   1\n");
     free(result);
 
     // Test with a single variable (no operator)
-    result = generate_postfix_row(1, 1, "a");
+    result = generate_postfix_row(1, 1, "a", 1);
     CU_ASSERT_STRING_EQUAL(result, "1 :   :   1\n");
     free(result);
 
     // Test with invalid expression (should handle it safely)
-    result = generate_postfix_row(0, 2, "");
+    result = generate_postfix_row(0, 2, "", 0);
     CU_ASSERT_PTR_NULL(result);
 }
 
@@ -357,16 +357,17 @@ void test_generate_infix_row(void)
     char *result;
     int *expression_map = infix_map("a&b"); // Example infix map for "ab&"
 
+
     // Test with a simple expression with two variables
-    result = generate_infix_row(0, 2, "ab&", expression_map, 3);
+    result = generate_infix_row(0, 2, "ab&", expression_map, 3, 3);
     CU_ASSERT_STRING_EQUAL(result, "0 0 :  0  :   0\n");
     free(result);
 
-    result = generate_infix_row(1, 2, "ab&", expression_map, 3);
+    result = generate_infix_row(1, 2, "ab&", expression_map, 3, 3);
     CU_ASSERT_STRING_EQUAL(result, "0 1 :  0  :   0\n");
     free(result);
 
-    result = generate_infix_row(3, 2, "ab&", expression_map, 3);
+    result = generate_infix_row(3, 2, "ab&", expression_map, 3, 3);
     CU_ASSERT_STRING_EQUAL(result, "1 1 :  1  :   1\n");
     free(result);
 
@@ -374,13 +375,13 @@ void test_generate_infix_row(void)
     free(expression_map);
     expression_map = infix_map("a");
     // Single a should be interpreted as postfix not infix
-    result = generate_infix_row(1, 1, "a", expression_map, 1);
+    result = generate_infix_row(1, 1, "a", expression_map, 1, 1);
     CU_ASSERT_STRING_EQUAL(result, "1 :   :   1\n");
 
     free(result);
 
     // Test with invalid expression (should handle it safely)
-    result = generate_infix_row(0, 2, "", expression_map, 0);
+    result = generate_infix_row(0, 2, "", expression_map, 0, 0);
     CU_ASSERT_PTR_NULL(result);
     
     free(expression_map);

@@ -15,11 +15,9 @@
 
 #include "table_builders.h"
 
-char *generate_postfix_row(int row_number, int number_of_variables, const char *expression)
+char *generate_postfix_row(int row_number, int number_of_variables, const char *expression, int expr_length)
 {
-    int expression_length = strlen(expression);
-
-    int row_length = number_of_variables * 2 + expression_length + 10;
+    int row_length = number_of_variables * 2 + expr_length + 10;
     char *row = (char *)malloc((row_length) * sizeof(char));
     if (row == NULL)
     {
@@ -64,7 +62,7 @@ char *generate_postfix_row(int row_number, int number_of_variables, const char *
 
     int position = number_of_variables * 2 + 2;
     // Handle single variable case
-    if (expression_length == 1)
+    if (expr_length == 1)
     { // number_of_variables*2 for the first column, +2 for ": "
         // Copy the string "  :   "
         row[position++] = ' ';
@@ -78,15 +76,14 @@ char *generate_postfix_row(int row_number, int number_of_variables, const char *
     }
     else
     {
-        int result_length = strlen(result);
-        memcpy(row + position, result, result_length); // Copy result
-        position += result_length;
+        memcpy(row + position, result, expr_length); // Copy result
+        position += expr_length;
         row[position++] = ' ';                       // Space before the final result
         row[position++] = ':';                       // Add the colon
         row[position++] = ' ';                       // Space after colon
         row[position++] = ' ';                       // Space after colon
         row[position++] = ' ';                       // Space after colon
-        row[position++] = result[result_length - 1]; // Last character of result
+        row[position++] = result[expr_length - 1]; // Last character of result
         row[position++] = '\n';                      // New line at the end
         row[position++] = '\0';                      // Null-terminate the string
     }
@@ -116,6 +113,7 @@ char *generate_postfix_truth_table_segment(const char *expression, int start_row
         return (char *)NULL;
     }
 
+    int expr_length = strlen(expression);
     int number_of_variables = count_unique_variables(expression);
     int number_of_rows = end_row - start_row + 1;
     int row_length = number_of_variables * 2 + strlen(expression) + 9;
@@ -133,7 +131,7 @@ char *generate_postfix_truth_table_segment(const char *expression, int start_row
     // Generate the segment
     for (int i = start_row; i < end_row; i++)
     {
-        char *row = generate_postfix_row(i, number_of_variables, expression);
+        char *row = generate_postfix_row(i, number_of_variables, expression, expr_length);
 
         if (row == NULL)
         {
@@ -168,6 +166,7 @@ char *generate_true_postfix_truth_table_segment(const char *expression, int star
     {
         end_row = (1 << count_unique_variables(expression));
     }
+    int expr_length = strlen(expression);
     int number_of_variables = count_unique_variables(expression);
     int number_of_rows = end_row - start_row;
     int row_length = number_of_variables * 2 + strlen(expression) + 9;
@@ -184,7 +183,7 @@ char *generate_true_postfix_truth_table_segment(const char *expression, int star
     // Generate the segment
     for (int i = start_row; i < end_row; i++)
     {
-        char *row = generate_postfix_row(i, number_of_variables, expression);
+        char *row = generate_postfix_row(i, number_of_variables, expression, expr_length);
         if (row == NULL)
         {
             fprintf(stderr, "Failed to generate row in file %s at line %d\n", __FILE__, __LINE__);
@@ -348,7 +347,7 @@ void generate_postfix_table_body(const char *expression, FILE *file)
     }
 }
 
-char *generate_infix_row(int row_number, int number_of_variables, const char *expression, int *map, int expr_length)
+char *generate_infix_row(int row_number, int number_of_variables, const char *expression, int *map, int expr_length, int rpn_length)
 {
     int row_length = number_of_variables * 2 + expr_length + 10; // Sufficient space for formatting
     char *row = (char *)malloc(row_length * sizeof(char));
@@ -408,7 +407,7 @@ char *generate_infix_row(int row_number, int number_of_variables, const char *ex
     // Position to insert the result into the row
     int position = number_of_variables * 2 + 2;
     // Handle the case of a single variable expression
-    if (strlen(modified_expression) == 1)
+    if (expr_length == 1)
     {
         row[position++] = ' ';
         row[position++] = ' ';
@@ -422,11 +421,10 @@ char *generate_infix_row(int row_number, int number_of_variables, const char *ex
     // Handle the general case
     else
     {
-        int rpn_length = strlen(rpn_expr);
-        int res_len = strlen(result);
+       
         // Copy the result into the row
-        memcpy(row + position, result, res_len);
-        position += res_len;
+        memcpy(row + position, result, expr_length);
+        position += expr_length;
         row[position++] = ' '; // Space before the final result
         row[position++] = ':'; // Add the colon
         row[position++] = ' '; // Space after colon
@@ -473,6 +471,7 @@ char *generate_infix_truth_table_segment(const char *expression, int start_row, 
         free(rpnArr);
         return (char *)NULL;
     }
+    int rpn_length = strlen(rpn_expression);
     int number_of_variables = count_unique_variables(expression);
     int number_of_rows = end_row - start_row + 1;
     int row_length = number_of_variables * 2 + strlen(expression) + 9;
@@ -492,7 +491,7 @@ char *generate_infix_truth_table_segment(const char *expression, int start_row, 
     for (int i = start_row; i < end_row; i++)
     {
         // Get the length of the row
-        char *row = generate_infix_row(i, number_of_variables, rpn_expression, rpnArr, expression_length);
+        char *row = generate_infix_row(i, number_of_variables, rpn_expression, rpnArr, expression_length, rpn_length);
         if (row == NULL)
         {
             fprintf(stderr, "Failed to generate row in file %s at line %d\n", __FILE__, __LINE__);
@@ -538,6 +537,7 @@ char *generate_true_infix_truth_table_segment(const char *expression, int start_
     }
     // Debug
     // printf("start row: %ld end row: %ld\n", start_row, end_row);
+    int rpn_length = strlen(rpn_expression);
     int number_of_variables = count_unique_variables(expression);
     int number_of_rows = end_row - start_row;
     int row_length = number_of_variables * 2 + strlen(expression) + 9;
@@ -555,7 +555,7 @@ char *generate_true_infix_truth_table_segment(const char *expression, int start_
 
     for (int i = start_row; i < end_row; i++)
     {
-        char *row = generate_infix_row(i, number_of_variables, rpn_expression, inf_map, expression_length);
+        char *row = generate_infix_row(i, number_of_variables, rpn_expression, inf_map, expression_length, rpn_length);
         if (row == NULL)
         {
             fprintf(stderr, "Failed to generate row in file %s at line %d\n", __FILE__, __LINE__);

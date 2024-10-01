@@ -25,9 +25,10 @@ char *generate_separator(const char *expression);
  * @param row_number At row number 3 (011) with variables a b c, the expression would evaluate at a=0 b=1 c=1
  * @param number_of_variables The number of variables in the expression.
  * @param expression The expression itself
+ * @param expr_length The length of the expression
  * @return The full evaluated row including final result, intermediate results, and variable values
  */
-char *generate_postfix_row(int row_number, int number_of_variables, const char *expression);
+char *generate_postfix_row(int row_number, int number_of_variables, const char *expression, int expr_length);
 
 /**
  * Function to generate the full table body (including header and separator), followed by writing it to a file
@@ -69,10 +70,11 @@ void *infix_rows_generator(void *arg);
  * @param number_of_variables The number of variables in the expression.
  * @param expression The expression (in rpn) for which the segment is generated.
  * @param map The map used to reshuffle the rpn expression to infix.
- * @param expr_length The length of the expression
+ * @param expr_length The length of the infix expression
+ * @param rpn_length The length of the rpn expression
  * @return The full evaluated row including final result, intermediate results, and variable values
  */
-char *generate_infix_row(int row_number, int number_of_variables, const char *expression, int *map, int expr_length);
+char *generate_infix_row(int row_number, int number_of_variables, const char *expression, int *map, int expr_length, int rpn_length);
 
 /**
  * Function to generate a segment of the table for a postfix expression between start_row and end_row
