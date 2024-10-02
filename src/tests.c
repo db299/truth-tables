@@ -336,19 +336,19 @@ void test_generate_true_postfix_truth_table_segment(void)
 {
     char *result;
     // Test for rows that produce true results for "ab&"
-    result = generate_true_postfix_truth_table_segment("ab&", 0, 4);
+    result = generate_true_postfix_truth_table_segment("ab&", 3, 2, 0, 4);
     CU_ASSERT_STRING_EQUAL(result, "1 1 :   1 :   1\n");
     free(result);
 
     // Test for "ab|"
-    result = generate_true_postfix_truth_table_segment("ab|", 0, 4);
+    result = generate_true_postfix_truth_table_segment("ab|", 3, 2, 0, 4);
     CU_ASSERT_STRING_EQUAL(result, "0 1 :   1 :   1\n1 0 :   1 :   1\n1 1 :   1 :   1\n");
     free(result);
 
-    result = generate_true_postfix_truth_table_segment("", -1, 3);
+    result = generate_true_postfix_truth_table_segment("", 0, 0, -1, 3);
     CU_ASSERT_PTR_NULL(result);
 
-    result = generate_true_postfix_truth_table_segment("", 0, 1);
+    result = generate_true_postfix_truth_table_segment("", 0, 0, 0, 1);
     CU_ASSERT_PTR_NULL(result);
 }
 
@@ -411,21 +411,21 @@ void test_generate_infix_truth_table_segment(void)
 void test_generate_true_infix_truth_table_segment(void)
 {
     char *result;
-
+    int *expression_map = infix_map("a&b"); // Example infix map for "ab&"
     // Test for rows that produce true results for "a&b"
-    result = generate_true_infix_truth_table_segment("a&b", 0, 4);
+    result = generate_true_infix_truth_table_segment("ab&", expression_map, 3, 3, 2, 0, 4);
     CU_ASSERT_STRING_EQUAL(result, "1 1 :  1  :   1\n");
     free(result);
 
     // Test for "a|b"
-    result = generate_true_infix_truth_table_segment("a|b", 0, 4);
+    result = generate_true_infix_truth_table_segment("ab|", expression_map, 3, 3, 2, 0, 4);
     CU_ASSERT_STRING_EQUAL(result, "0 1 :  1  :   1\n1 0 :  1  :   1\n1 1 :  1  :   1\n");
     free(result);
 
-    result = generate_true_infix_truth_table_segment("", -1, 3);
+    result = generate_true_infix_truth_table_segment("", expression_map, 0, 0, 0, -1, 3);
     CU_ASSERT_PTR_NULL(result);
 
-    result = generate_true_infix_truth_table_segment("", 0, 1);
+    result = generate_true_infix_truth_table_segment("", expression_map, 0, 0, 0, 0, 1);
     CU_ASSERT_PTR_NULL(result);
 }
 

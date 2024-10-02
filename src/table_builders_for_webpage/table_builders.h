@@ -100,19 +100,25 @@ char *generate_infix_truth_table_segment(const char *expression, int start_row, 
  * Function to generate only the true rows in a truth table segment for an infix expression. Allocates the memory
  * the entire segment would have taken as an upper bound.
  * @param expression the expression (in rpn) for which the segment is generated
+ * @param infix_map the map to reshuffle the rpn expression into infix
+ * @param expression_length the length of the infix expression
+ * @param rpn_length the length of the rpn expression
+ * @param number_of_variables the number of variables in the expression
  * @param start_row the start row for the segment
  * @param end_rows the end row for the segment
  */
-char *generate_true_infix_truth_table_segment(const char *expression, int start_row, int end_row);
+char *generate_true_infix_truth_table_segment(const char *rpn_expression, int *infix_map, int expression_length, int rpn_length, int number_of_variables, int start_row, int end_row);
 
 /**
  * Function to generate only the true rows in a truth table segment for a postfix expression. Allocates the memory
  * the entire segment would have taken as an upper bound.
  * @param expression the expression for which the segment is generated
+ * @param expr_length the length of the expression
+ * @param number_of_variables the number of variables in the expression
  * @param start_row the start row for the segment
  * @param end_row the end row for the segment
  */
-char *generate_true_postfix_truth_table_segment(const char *expression, int start_row, int end_row);
+char *generate_true_postfix_truth_table_segment(const char *expression, int expr_length, int number_of_variables, int start_row, int end_row);
 
 /**
  * Struct holding data for postfix row generator threads
@@ -121,9 +127,11 @@ typedef struct
 {
     FILE *file;
     sem_t *semaphore;
+    sem_t *creation_semaphore;
     int num_threads;
     int thread_id;
     int number_of_variables;
+    int expression_length;
     const char *expression;
     int start_row;
     int end_row;
@@ -136,11 +144,14 @@ typedef struct
 {
     FILE *file;
     sem_t *semaphore;
+    sem_t *creation_semaphore;
     int num_threads;
     int thread_id;
     int number_of_variables;
     int *map;
     const char *expression;
+    const char *rpn_expression;
+    int rpn_length;
     int expression_length;
     int start_row;
     int end_row;
