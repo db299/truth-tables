@@ -244,7 +244,11 @@ void generate_postfix_table_body(const char *expression, FILE *file)
     }
 
     sem_t creation_semaphore;
-    sem_init(&creation_semaphore, 0, threads_num);
+    if (sem_init(&creation_semaphore, 0, threads_num) == -1)
+    {
+        fprintf(stderr, "Failed to initialise semaphore in file %s at line %d\n", __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
     // Allocate arrays for threads and thread data of size max_threads_in_batch
     pthread_t threads[threads_num];
     postfix_thread_data thread_data[threads_num];
@@ -255,7 +259,7 @@ void generate_postfix_table_body(const char *expression, FILE *file)
     {
         if (sem_init(&semaphores[i], 0, 0) == -1)
         {
-            perror("sem_init");
+            fprintf(stderr, "Failed to initialise semaphore in file %s at line %d\n", __FILE__, __LINE__);
             exit(EXIT_FAILURE);
         }
     }
@@ -380,7 +384,7 @@ char *generate_infix_row(int row_number, int number_of_variables, const char *ex
     }
 
     char *evaled = evaluate_expr(modified_expression);
-    if (evaled== NULL)
+    if (evaled == NULL)
     {
         fprintf(stderr, "Failed to evaluate expression in file %s at line %d\n", __FILE__, __LINE__);
         free(row);
@@ -612,7 +616,11 @@ void generate_infix_table_body(const char *expression, FILE *file)
     }
 
     sem_t creation_semaphore;
-    sem_init(&creation_semaphore, 0, num_threads);
+    if (sem_init(&creation_semaphore, 0, num_threads) == -1)
+    {
+        fprintf(stderr, "Failed to initialise semaphore in file %s at line %d\n", __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
 
     pthread_t threads[num_threads];
     infix_thread_data thread_data[num_threads];
@@ -623,7 +631,7 @@ void generate_infix_table_body(const char *expression, FILE *file)
     {
         if (sem_init(&semaphores[i], 0, 0) == -1)
         {
-            perror("sem_init");
+            fprintf(stderr, "Failed to initialise semaphore in file %s at line %d\n", __FILE__, __LINE__);
             exit(EXIT_FAILURE);
         }
     }
